@@ -1,0 +1,1051 @@
+{
+  "address": "264Fck2jjphRCD3vZ5uKA9zzKnzhjXsqGjpNsY2YopeZ",
+  "metadata": {
+    "name": "liquidity_vault",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Liquidity Vault: deposit, withdraw, swap via Raydium CLMM"
+  },
+  "docs": [
+    "Liquidity Vault.",
+    "Week 8:  skeleton (config, user PDA, share mint).",
+    "Week 9:  deposit — tokens in, share tokens out.",
+    "Week 10: CPI & withdraw — shares burned, vault returns tokens via the",
+    "Token program with a PDA signature.",
+    "Week 12: swap via Raydium CLMM — the vault swaps its tokens in a",
+    "Raydium CLMM pool (CPI signed by the vault PDA) with slippage limits."
+  ],
+  "instructions": [
+    {
+      "name": "set_pool",
+      "docs": [
+        "Admin: attach a Raydium CLMM pool and set max slippage (bps)"
+      ],
+      "discriminator": [
+        119,
+        30,
+        14,
+        180,
+        115,
+        225,
+        167,
+        238
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true
+        },
+        {
+          "name": "pool_state"
+        }
+      ],
+      "args": [
+        {
+          "name": "max_slippage_bps",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "init_strategy_account",
+      "docs": [
+        "Admin: create a vault-owned token account for another mint (ATA of the config PDA)"
+      ],
+      "discriminator": [
+        37,
+        13,
+        252,
+        62,
+        33,
+        52,
+        162,
+        227
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "vault_ata",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "associated_token_program"
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "swap_via_raydium",
+      "docs": [
+        "Admin/keeper: swap vault tokens through the Raydium CLMM pool.",
+        "remaining_accounts: tick-array bitmap extension + tick arrays."
+      ],
+      "discriminator": [
+        245,
+        0,
+        176,
+        137,
+        103,
+        171,
+        155,
+        121
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "docs": [
+            "Vault admin / strategy keeper"
+          ],
+          "signer": true
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "clmm_program"
+        },
+        {
+          "name": "amm_config"
+        },
+        {
+          "name": "pool_state",
+          "writable": true
+        },
+        {
+          "name": "input_token_account",
+          "docs": [
+            "Vault-owned token account that pays (authority = config PDA)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "output_token_account",
+          "docs": [
+            "Vault-owned token account that receives (authority = config PDA)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "input_vault",
+          "writable": true
+        },
+        {
+          "name": "output_vault",
+          "writable": true
+        },
+        {
+          "name": "observation_state",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "token_program_2022"
+        },
+        {
+          "name": "memo_program"
+        },
+        {
+          "name": "input_mint"
+        },
+        {
+          "name": "output_mint"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount_in",
+          "type": "u64"
+        },
+        {
+          "name": "min_amount_out",
+          "type": "u64"
+        },
+        {
+          "name": "sqrt_price_limit_x64",
+          "type": "u128"
+        }
+      ]
+    },
+    {
+      "name": "initialize_vault",
+      "docs": [
+        "Admin creates the vault: config PDA + share mint PDA + vault token account PDA"
+      ],
+      "discriminator": [
+        48,
+        191,
+        163,
+        44,
+        71,
+        129,
+        63,
+        164
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "underlying_mint"
+        },
+        {
+          "name": "config",
+          "writable": true
+        },
+        {
+          "name": "share_mint",
+          "docs": [
+            "Share token: mint authority = config PDA, same decimals as underlying"
+          ],
+          "writable": true
+        },
+        {
+          "name": "vault_token_account",
+          "docs": [
+            "Vault treasury: token account owned by config PDA"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program"
+        },
+        {
+          "name": "rent"
+        }
+      ],
+      "args": [
+        {
+          "name": "fee_bps",
+          "type": "u16"
+        },
+        {
+          "name": "deposit_cap",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "initialize_user",
+      "docs": [
+        "(optional) User creates their position PDA explicitly.",
+        "`deposit` also creates it automatically on the first deposit."
+      ],
+      "discriminator": [
+        111,
+        17,
+        185,
+        250,
+        60,
+        122,
+        38,
+        254
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "user_position",
+          "writable": true
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "deposit",
+      "docs": [
+        "Deposit underlying tokens, receive shares (with slippage protection)"
+      ],
+      "discriminator": [
+        242,
+        35,
+        198,
+        137,
+        82,
+        225,
+        242,
+        182
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true
+        },
+        {
+          "name": "underlying_mint"
+        },
+        {
+          "name": "share_mint",
+          "writable": true
+        },
+        {
+          "name": "vault_token_account",
+          "writable": true
+        },
+        {
+          "name": "user_position",
+          "docs": [
+            "Created automatically on the first deposit"
+          ],
+          "writable": true
+        },
+        {
+          "name": "user_token_account",
+          "docs": [
+            "User's underlying tokens (source)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "user_share_account",
+          "docs": [
+            "User's share tokens (destination), ATA created if missing"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "associated_token_program"
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "min_shares_out",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "preview_deposit",
+      "docs": [
+        "Read-only: shares that `amount` would mint right now"
+      ],
+      "discriminator": [
+        16,
+        61,
+        8,
+        235,
+        146,
+        126,
+        80,
+        84
+      ],
+      "accounts": [
+        {
+          "name": "config"
+        },
+        {
+          "name": "share_mint"
+        },
+        {
+          "name": "vault_token_account"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ],
+      "returns": "u64"
+    },
+    {
+      "name": "withdraw",
+      "docs": [
+        "Burn shares (CPI, user signs) and receive underlying tokens",
+        "(CPI transfer_checked, config PDA signs)"
+      ],
+      "discriminator": [
+        183,
+        18,
+        70,
+        156,
+        148,
+        109,
+        161,
+        34
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true
+        },
+        {
+          "name": "underlying_mint"
+        },
+        {
+          "name": "share_mint",
+          "writable": true
+        },
+        {
+          "name": "vault_token_account",
+          "docs": [
+            "Vault treasury — authority is the config PDA"
+          ],
+          "writable": true
+        },
+        {
+          "name": "user_position",
+          "docs": [
+            "Seeds include `owner` -> nobody can withdraw from someone else's position"
+          ],
+          "writable": true
+        },
+        {
+          "name": "user_token_account",
+          "docs": [
+            "Destination of the underlying tokens"
+          ],
+          "writable": true
+        },
+        {
+          "name": "user_share_account",
+          "docs": [
+            "Share tokens to burn"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "shares",
+          "type": "u64"
+        },
+        {
+          "name": "min_assets_out",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "preview_withdraw",
+      "docs": [
+        "Read-only: tokens (after fee) that burning `shares` would return right now"
+      ],
+      "discriminator": [
+        66,
+        3,
+        217,
+        38,
+        187,
+        176,
+        144,
+        135
+      ],
+      "accounts": [
+        {
+          "name": "config"
+        },
+        {
+          "name": "share_mint"
+        },
+        {
+          "name": "vault_token_account"
+        }
+      ],
+      "args": [
+        {
+          "name": "shares",
+          "type": "u64"
+        }
+      ],
+      "returns": "u64"
+    },
+    {
+      "name": "close_position",
+      "docs": [
+        "Close an empty user position and get the rent back"
+      ],
+      "discriminator": [
+        123,
+        134,
+        81,
+        0,
+        49,
+        68,
+        98,
+        98
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "user_position",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "update_config",
+      "docs": [
+        "Admin: change fee / cap / pause"
+      ],
+      "discriminator": [
+        29,
+        158,
+        252,
+        191,
+        10,
+        83,
+        219,
+        99
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "fee_bps",
+          "type": {
+            "option": "u16"
+          }
+        },
+        {
+          "name": "deposit_cap",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "paused",
+          "type": {
+            "option": "bool"
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "liquidity_vault::state::UserPosition",
+      "discriminator": [
+        251,
+        248,
+        209,
+        245,
+        83,
+        234,
+        17,
+        27
+      ]
+    },
+    {
+      "name": "liquidity_vault::state::VaultConfig",
+      "discriminator": [
+        99,
+        86,
+        43,
+        216,
+        184,
+        102,
+        119,
+        77
+      ]
+    }
+  ],
+  "types": [
+    {
+      "docs": [
+        "Emitted on every successful deposit"
+      ],
+      "name": "liquidity_vault::events::DepositEvent",
+      "type": {
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "config",
+            "type": "pubkey"
+          },
+          {
+            "docs": [
+              "Underlying tokens deposited"
+            ],
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "docs": [
+              "Share tokens minted to the user"
+            ],
+            "name": "shares",
+            "type": "u64"
+          },
+          {
+            "docs": [
+              "Vault state AFTER the deposit"
+            ],
+            "name": "total_assets",
+            "type": "u64"
+          },
+          {
+            "name": "total_shares",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "docs": [
+        "Emitted when the vault swaps through Raydium CLMM"
+      ],
+      "name": "liquidity_vault::events::VaultSwapEvent",
+      "type": {
+        "fields": [
+          {
+            "name": "config",
+            "type": "pubkey"
+          },
+          {
+            "name": "pool",
+            "type": "pubkey"
+          },
+          {
+            "name": "input_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "output_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_in",
+            "type": "u64"
+          },
+          {
+            "docs": [
+              "Actually received (measured by balance change)"
+            ],
+            "name": "amount_out",
+            "type": "u64"
+          },
+          {
+            "name": "min_amount_out",
+            "type": "u64"
+          },
+          {
+            "docs": [
+              "Expected at spot price after fee (before price impact)"
+            ],
+            "name": "spot_amount_out",
+            "type": "u64"
+          },
+          {
+            "name": "sqrt_price_before",
+            "type": "u128"
+          },
+          {
+            "name": "sqrt_price_after",
+            "type": "u128"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "docs": [
+        "Emitted on every successful withdraw"
+      ],
+      "name": "liquidity_vault::events::WithdrawEvent",
+      "type": {
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "config",
+            "type": "pubkey"
+          },
+          {
+            "docs": [
+              "Share tokens burned"
+            ],
+            "name": "shares",
+            "type": "u64"
+          },
+          {
+            "docs": [
+              "Underlying tokens sent to the user (after fee)"
+            ],
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "docs": [
+              "Fee kept in the vault"
+            ],
+            "name": "fee",
+            "type": "u64"
+          },
+          {
+            "docs": [
+              "User's shares remaining"
+            ],
+            "name": "shares_left",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ],
+        "kind": "struct"
+      }
+    },
+    {
+      "name": "liquidity_vault::state::UserPosition",
+      "docs": [
+        "Per-user position. PDA: [\"user\", config, owner]"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "config",
+            "type": "pubkey"
+          },
+          {
+            "name": "shares",
+            "docs": [
+              "Shares minted to this user through the vault"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "deposited",
+            "docs": [
+              "Net underlying deposited by the user"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "last_action_ts",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "liquidity_vault::state::VaultConfig",
+      "docs": [
+        "Global vault settings. PDA: [\"config\", underlying_mint]"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "docs": [
+              "Who can change settings / pause the vault"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "underlying_mint",
+            "docs": [
+              "Token that users deposit (e.g. USDC)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "share_mint",
+            "docs": [
+              "Share token (LP token of the vault). PDA: [\"shares\", config]"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "vault_token_account",
+            "docs": [
+              "Token account that holds deposited tokens. PDA: [\"vault\", config]"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "pool",
+            "docs": [
+              "Raydium CLMM pool the vault trades / provides liquidity in (set_pool)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "max_slippage_bps",
+            "docs": [
+              "Max allowed slippage vs. the pool spot price for vault swaps (bps)"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "fee_bps",
+            "docs": [
+              "Withdraw fee in basis points (100 = 1%)"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "deposit_cap",
+            "docs": [
+              "Max total underlying the vault accepts (0 = no limit)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_deposited",
+            "docs": [
+              "Sum of all deposits minus withdrawals (accounting)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "paused",
+            "docs": [
+              "Emergency stop"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "share_mint_bump",
+            "type": "u8"
+          },
+          {
+            "name": "vault_bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ],
+  "events": [
+    {
+      "discriminator": [
+        120,
+        248,
+        61,
+        83,
+        31,
+        142,
+        107,
+        144
+      ],
+      "name": "liquidity_vault::events::DepositEvent"
+    },
+    {
+      "discriminator": [
+        94,
+        165,
+        53,
+        233,
+        129,
+        209,
+        231,
+        181
+      ],
+      "name": "liquidity_vault::events::VaultSwapEvent"
+    },
+    {
+      "discriminator": [
+        22,
+        9,
+        133,
+        26,
+        160,
+        44,
+        71,
+        192
+      ],
+      "name": "liquidity_vault::events::WithdrawEvent"
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "ZeroAmount",
+      "msg": "Amount must be greater than zero"
+    },
+    {
+      "code": 6001,
+      "name": "VaultPaused",
+      "msg": "Vault is paused"
+    },
+    {
+      "code": 6002,
+      "name": "DepositCapExceeded",
+      "msg": "Deposit would exceed the vault deposit cap"
+    },
+    {
+      "code": 6003,
+      "name": "FeeTooHigh",
+      "msg": "Fee is too high"
+    },
+    {
+      "code": 6004,
+      "name": "InsufficientShares",
+      "msg": "Not enough shares"
+    },
+    {
+      "code": 6005,
+      "name": "ZeroShares",
+      "msg": "Calculated shares amount is zero (deposit too small)"
+    },
+    {
+      "code": 6006,
+      "name": "MathOverflow",
+      "msg": "Math overflow"
+    },
+    {
+      "code": 6007,
+      "name": "Unauthorized",
+      "msg": "Only the vault admin can do this"
+    },
+    {
+      "code": 6008,
+      "name": "SlippageExceeded",
+      "msg": "Slippage: result is below the minimum requested"
+    },
+    {
+      "code": 6009,
+      "name": "InsufficientFunds",
+      "msg": "Not enough tokens in user account"
+    },
+    {
+      "code": 6010,
+      "name": "InsufficientLiquidity",
+      "msg": "Not enough idle liquidity in the vault"
+    },
+    {
+      "code": 6011,
+      "name": "PositionNotEmpty",
+      "msg": "Position still has shares, withdraw them first"
+    },
+    {
+      "code": 6012,
+      "name": "InvalidPool",
+      "msg": "Account is not the configured Raydium CLMM pool"
+    },
+    {
+      "code": 6013,
+      "name": "PoolAccountMismatch",
+      "msg": "Raydium pool accounts do not match the pool state"
+    },
+    {
+      "code": 6014,
+      "name": "PoolMintMismatch",
+      "msg": "Pool does not contain the vault underlying token"
+    },
+    {
+      "code": 6015,
+      "name": "MinOutTooLow",
+      "msg": "min_amount_out is too low: below the allowed slippage vs pool spot price"
+    },
+    {
+      "code": 6016,
+      "name": "SlippageTooHigh",
+      "msg": "Slippage setting is too high"
+    },
+    {
+      "code": 6017,
+      "name": "SameMint",
+      "msg": "Input and output mint must differ"
+    },
+    {
+      "code": 6018,
+      "name": "InputOverspent",
+      "msg": "Swap spent more input than requested"
+    }
+  ]
+}

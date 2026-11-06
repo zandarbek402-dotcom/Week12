@@ -1,0 +1,22 @@
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test only_admin_can_swap ...
+Program log: AnchorError caused by account: config. Error Code: Unauthorized. Error Number: 6007. Error Message: Only the vault admin can do this.
+test paused_vault_cannot_swap ...
+Program log: AnchorError thrown in programs\liquidity_vault\src\instructions\swap_via_raydium.rs:99. Error Code: VaultPaused. Error Number: 6001. Error Message: Vault is paused.
+test raydium_enforces_min_amount_out_on_price_impact ...
+Program log: AnchorError thrown in programs/amm/src/instructions/swap_v2.rs:364. Error Code: TooLittleOutputReceived. Error Number: 6018. Error Message: Too little output received.
+test rejects_min_amount_out_below_slippage_floor ...
+Program log: AnchorError thrown in programs\liquidity_vault\src\instructions\swap_via_raydium.rs:130. Error Code: MinOutTooLow. Error Number: 6015. Error Message: min_amount_out is too low: below the allowed slippage vs pool spot price.
+Program log: AnchorError thrown in programs\liquidity_vault\src\instructions\swap_via_raydium.rs:130. Error Code: MinOutTooLow. Error Number: 6015. Error Message: min_amount_out is too low: below the allowed slippage vs pool spot price.
+test rejects_wrong_pool_vaults ...
+Program log: AnchorError thrown in programs\liquidity_vault\src\instructions\swap_via_raydium.rs:111. Error Code: PoolAccountMismatch. Error Number: 6013. Error Message: Raydium pool accounts do not match the pool state.
+test vault_swaps_through_raydium_with_slippage_protection ...
+pool tick 6888, spot out for 20 W11A = 39727863 (min_out 39330584)
+  Program 264Fck2jjphRCD3vZ5uKA9zzKnzhjXsqGjpNsY2YopeZ invoke [1]
+  Program DRayAUgENGQBKVaX8owNhgzkEDyoHTGVEGHVJT1E9pfH invoke [2]
+  Program log: Vault swap: 20000000 in -> 39658900 out (min 39330584, spot 39727863), tick 6888 -> 6853
+vault: W11A 500 -> 480, W11B 0 -> 39.6589
+pool tick 6888 -> 6853
+vault after swap back: W11A 489.958727, W11B 19.82945
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.90s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

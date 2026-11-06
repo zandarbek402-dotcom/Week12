@@ -1,0 +1,22 @@
+[toolchain]
+anchor_version = "0.30.1"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+liquidity_vault = "264Fck2jjphRCD3vZ5uKA9zzKnzhjXsqGjpNsY2YopeZ"
+
+[programs.devnet]
+liquidity_vault = "264Fck2jjphRCD3vZ5uKA9zzKnzhjXsqGjpNsY2YopeZ"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "Localnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "npx ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
